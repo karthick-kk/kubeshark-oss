@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 var _protocol = api.Protocol{

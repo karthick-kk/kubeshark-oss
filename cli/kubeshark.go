@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/kubeshark/kubeshark/cli/cmd"
-	"github.com/kubeshark/kubeshark/cli/cmd/goUtils"
+	"github.com/karthick-kk/kubeshark-oss/cli/cmd"
+	"github.com/karthick-kk/kubeshark-oss/cli/cmd/goUtils"
 )
 
 func main() {

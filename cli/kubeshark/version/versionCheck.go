@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/cli/pkg/version"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark"
+	"github.com/karthick-kk/kubeshark-oss/cli/pkg/version"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 
 	"github.com/google/go-github/v37/github"
 )

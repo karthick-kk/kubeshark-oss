@@ -8,11 +8,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/cli/uiUtils"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared/units"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared/units"
 )
 
 const (

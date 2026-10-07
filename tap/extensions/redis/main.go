@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 var protocol = api.Protocol{
@@ -56,6 +56,11 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 		if err != nil {
 			return err
 		}
+
+		// Claim the protocol so the extension chain stops here (matches kafka).
+		// Without this, a later terminal fallback dissector would also see the
+		// stream and emit a duplicate entry.
+		reader.GetParent().SetProtocol(&protocol)
 
 		if reader.GetIsClient() {
 			err = handleClientStream(reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), redisPacket, reqResMatcher)

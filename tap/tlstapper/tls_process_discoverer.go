@@ -5,13 +5,12 @@ import (
 	"io/ioutil"
 	"net/url"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/go-errors/errors"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -124,42 +123,61 @@ func getProcessCgroup(procfs string, pid string) (string, error) {
 	return normalizeCgroup(cgrouppath), nil
 }
 
+// extractCgroup returns the cgroup path from the lines of /proc/<pid>/cgroup.
+// cgroup-v2 has a single "0::<path>" line; cgroup-v1 has one "<id>:<controllers>:<path>"
+// line per hierarchy. The file always ends in a newline, so the last split element is
+// empty and we must not gate on the raw line count.
 func extractCgroup(lines []string) string {
-	if len(lines) == 1 {
-		parts := strings.Split(lines[0], ":")
-		return parts[len(parts)-1]
-	} else {
-		for _, line := range lines {
-			if strings.Contains(line, ":pids:") {
-				parts := strings.Split(line, ":")
-				return parts[len(parts)-1]
+	// cgroup v2: a single "0::<path>" line
+	for _, line := range lines {
+		if strings.HasPrefix(line, "0::") {
+			return strings.TrimPrefix(strings.TrimSpace(line), "0::")
+		}
+	}
+
+	// cgroup v1: prefer the pids controller line, fall back to any non-empty line
+	var fallback string
+	for _, line := range lines {
+		if strings.Contains(line, ":pids:") {
+			parts := strings.Split(line, ":")
+			return parts[len(parts)-1]
+		}
+		if fallback == "" && strings.TrimSpace(line) != "" {
+			parts := strings.Split(line, ":")
+			if len(parts) >= 3 {
+				fallback = parts[len(parts)-1]
 			}
 		}
 	}
 
-	return ""
+	return fallback
 }
 
 // cgroup in the /proc/<pid>/cgroup may look something like
 //
-//  /system.slice/docker-<ID>.scope
-//  /system.slice/containerd-<ID>.scope
-//  /kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3beae8e0_164d_4689_a087_efd902d8c2ab.slice/docker-<ID>.scope
-//  /kubepods/besteffort/pod7709c1d5-447c-428f-bed9-8ddec35c93f4/<ID>
+//	/system.slice/docker-<ID>.scope
+//	/system.slice/containerd-<ID>.scope
+//	/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3beae8e0_164d_4689_a087_efd902d8c2ab.slice/docker-<ID>.scope
+//	0::/kubepods-burstable-pod3beae8e0_164d_4689_a087_efd902d8c2ab.slice/cri-containerd-<ID>.scope
+//	/kubepods/besteffort/pod7709c1d5-447c-428f-bed9-8ddec35c93f4/<ID>
 //
-// This function extract the <ID> out of the cgroup path, the <ID> should match
-//	the "Container ID:" field when running kubectl describe pod <POD>
-//
+// This function extracts the <ID> out of the cgroup path; the <ID> must match
+// the container ID ("containerd://<ID>") reported in the pod's
+// containerStatuses so the tls discoverer can map it to a PID. The container
+// ID is the 64-hex suffix after the last hyphen (docker-/cri-containerd-/
+// cri-crio-), so we take the segment after the final hyphen rather than
+// assuming a fixed runtime prefix — that is what lets it resolve on
+// cgroup-v2 + containerd hosts, whose cgroup line is a single "0::" entry.
 func normalizeCgroup(cgrouppath string) string {
 	basename := strings.TrimSpace(path.Base(cgrouppath))
 
-	if strings.Contains(basename, "-") {
-		basename = basename[strings.Index(basename, "-")+1:]
+	if i := strings.LastIndex(basename, "."); i >= 0 {
+		basename = basename[:i]
 	}
 
-	if strings.Contains(basename, ".") {
-		return strings.TrimSuffix(basename, filepath.Ext(basename))
-	} else {
-		return basename
+	if i := strings.LastIndex(basename, "-"); i >= 0 {
+		basename = basename[i+1:]
 	}
+
+	return basename
 }

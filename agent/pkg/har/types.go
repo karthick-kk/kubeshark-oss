@@ -5,7 +5,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 /*

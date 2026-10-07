@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 const (

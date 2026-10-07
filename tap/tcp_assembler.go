@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/reassembly"
 	"github.com/hashicorp/golang-lru/simplelru"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/tap/api"
-	"github.com/kubeshark/kubeshark/tap/dbgctl"
-	"github.com/kubeshark/kubeshark/tap/diagnose"
-	"github.com/kubeshark/kubeshark/tap/source"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/dbgctl"
+	"github.com/karthick-kk/kubeshark-oss/tap/diagnose"
+	"github.com/karthick-kk/kubeshark-oss/tap/source"
 )
 
 const (
@@ -37,11 +38,17 @@ type AssemblerStats struct {
 
 type tcpAssembler struct {
 	*reassembly.Assembler
-	streamPool             *reassembly.StreamPool
-	streamFactory          *tcpStreamFactory
-	ignoredPorts           []uint16
+	streamPool    *reassembly.StreamPool
+	streamFactory *tcpStreamFactory
+	ignoredPorts  []uint16
+	// lastClosedConnections (a simplelru.LRU) and liveConnections are read by
+	// the packet-processing goroutine on every packet and written both by that
+	// goroutine (stream created/closed) and by the CloseTimedoutTcpStreamChannels
+	// goroutine (which closes stale streams). simplelru's internal map is not
+	// thread-safe, so all access goes through connectionsLock.
 	lastClosedConnections  *simplelru.LRU // Actual type is map[string]int64 which is "connId -> lastSeen"
 	liveConnections        map[connectionId]bool
+	connectionsLock        sync.RWMutex
 	maxLiveStreams         int
 	staleConnectionTimeout time.Duration
 	stats                  AssemblerStats
@@ -184,16 +191,37 @@ func (a *tcpAssembler) processTcpPacket(origin api.Capture, packet gopacket.Pack
 	}
 }
 
+// Only tap-target streams are tracked in liveConnections. NewTcpStream fires
+// tcpStreamCreated for EVERY flow reassembly observes, but non-tap-target
+// streams never get closed (they are not stored in the streams map, so the
+// timeout closer and ReassemblyComplete never run close() for them). Tracking
+// them leaked the map past maxLiveStreams on high-churn clusters, after which
+// shouldThrottle dropped all new connections and no entries were produced
+// until a tapper restart. Tap-target streams are always cleaned up (timeout
+// closer / ReassemblyComplete), so scoping the map to them keeps it bounded
+// and makes the throttle reflect the streams that actually cost goroutines.
 func (a *tcpAssembler) tcpStreamCreated(stream *tcpStream) {
+	if !stream.isTapTarget {
+		return
+	}
+	a.connectionsLock.Lock()
 	a.liveConnections[stream.connectionId] = true
+	a.connectionsLock.Unlock()
 }
 
 func (a *tcpAssembler) tcpStreamClosed(stream *tcpStream) {
+	if !stream.isTapTarget {
+		return
+	}
+	a.connectionsLock.Lock()
 	a.lastClosedConnections.Add(stream.connectionId, time.Now().UnixMilli())
 	delete(a.liveConnections, stream.connectionId)
+	a.connectionsLock.Unlock()
 }
 
 func (a *tcpAssembler) isRecentlyClosed(c connectionId) bool {
+	a.connectionsLock.RLock()
+	defer a.connectionsLock.RUnlock()
 	if closedTimeMillis, ok := a.lastClosedConnections.Get(c); ok {
 		timeSinceClosed := time.Since(time.UnixMilli(closedTimeMillis.(int64)))
 		if timeSinceClosed < lastAckThreshold {
@@ -204,6 +232,8 @@ func (a *tcpAssembler) isRecentlyClosed(c connectionId) bool {
 }
 
 func (a *tcpAssembler) shouldThrottle(c connectionId) bool {
+	a.connectionsLock.RLock()
+	defer a.connectionsLock.RUnlock()
 	if _, ok := a.liveConnections[c]; ok {
 		return false
 	}

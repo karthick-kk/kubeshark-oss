@@ -11,19 +11,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
-	"github.com/kubeshark/kubeshark/agent/pkg/oas"
-	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/dependency"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/oas"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/servicemap"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/har"
-	"github.com/kubeshark/kubeshark/agent/pkg/holder"
-	"github.com/kubeshark/kubeshark/agent/pkg/providers"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/har"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/holder"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/providers"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/resolver"
-	"github.com/kubeshark/kubeshark/agent/pkg/utils"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/resolver"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/utils"
 
-	"github.com/kubeshark/kubeshark/logger"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 var k8sResolver *resolver.Resolver
@@ -123,7 +123,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		providers.EntryAdded(len(data), summary)
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
-		serviceMapGenerator.NewTCPEntry(kubesharkEntry.Source, kubesharkEntry.Destination, &item.Protocol)
+		serviceMapGenerator.NewEntry(kubesharkEntry, &item.Protocol)
 
 		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
 		oasGenerator.HandleEntry(kubesharkEntry)

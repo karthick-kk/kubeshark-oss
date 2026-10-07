@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -11,31 +11,30 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
-	"github.com/kubeshark/kubeshark/agent/pkg/entries"
-	"github.com/kubeshark/kubeshark/agent/pkg/middlewares"
-	"github.com/kubeshark/kubeshark/agent/pkg/models"
-	"github.com/kubeshark/kubeshark/agent/pkg/oas"
-	"github.com/kubeshark/kubeshark/agent/pkg/routes"
-	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
-	"github.com/kubeshark/kubeshark/agent/pkg/utils"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/dependency"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/entries"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/middlewares"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/models"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/oas"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/routes"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/servicemap"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/utils"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/api"
-	"github.com/kubeshark/kubeshark/agent/pkg/app"
-	"github.com/kubeshark/kubeshark/agent/pkg/config"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/api"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/app"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/config"
 
 	"github.com/gorilla/websocket"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/tap"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
-	"github.com/kubeshark/kubeshark/tap/dbgctl"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
+	"github.com/karthick-kk/kubeshark-oss/tap"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/dbgctl"
 	"github.com/op/go-logging"
 )
 
@@ -170,6 +169,70 @@ func runInTapperMode() {
 	logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
 
 	go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
+	// In tapper mode (kubesharkagent --tap) the CLI's tapRunner syncer does not run,
+	// so nobody reports this tapper's status to the agent. Without it, the agent's
+	// tappers status map stays empty and every pod shows as not tapped (0/N) in the UI.
+	// Self-report to the existing /status/tapperStatus route instead.
+	go reportTapperStatus(*apiServerAddress)
+}
+
+const tapperStatusReportInterval = 30 * time.Second
+
+// reportTapperStatus keeps this tapper's running status registered with the agent
+// so the agent marks the pods on this node as tapped. Node name comes from the
+// NODE_NAME downward-API field (already set in the daemonset spec).
+//
+// It runs forever on a fixed interval (not one-shot) because the agent stores the
+// status in its data dir, which is an emptyDir: an agent pod restart clears it and
+// the next report must repopulate it, otherwise the UI regresses to 0/N tapped.
+func reportTapperStatus(apiServerAddress string) {
+	nodeName := os.Getenv(shared.NodeNameEnvVar)
+	if nodeName == "" {
+		logger.Log.Warningf("NODE_NAME not set, cannot report tapper status to agent")
+		return
+	}
+
+	status := shared.TapperStatus{
+		TapperName: os.Getenv("HOSTNAME"),
+		NodeName:   nodeName,
+		Status:     "Running",
+	}
+	payload, err := json.Marshal(status)
+	if err != nil {
+		logger.Log.Errorf("Error marshalling tapper status: %v", err)
+		return
+	}
+
+	// ws://host/wsTapper -> http://host/status/tapperStatus
+	httpBase := strings.Replace(apiServerAddress, "ws://", "http://", 1)
+	httpBase = strings.Replace(httpBase, "wss://", "https://", 1)
+	url := strings.TrimSuffix(httpBase, "/wsTapper") + "/status/tapperStatus"
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	reportedOnce := false
+
+	for {
+		resp, err := client.Post(url, "application/json", bytes.NewReader(payload))
+		ok := false
+		if err != nil {
+			logger.Log.Infof("Tapper status report to %s failed: %v", url, err)
+		} else {
+			resp.Body.Close()
+			ok = resp.StatusCode == http.StatusOK
+			if !ok {
+				logger.Log.Infof("Tapper status report to %s returned %d", url, resp.StatusCode)
+			}
+		}
+
+		if ok {
+			if !reportedOnce {
+				logger.Log.Infof("Reported tapper status to agent: %+v", status)
+				reportedOnce = true
+			}
+		}
+
+		time.Sleep(tapperStatusReportInterval)
+	}
 }
 
 func runInStandaloneMode() {
@@ -278,9 +341,11 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		// NOTE: This is where the `*tapApi.OutputChannelItem` leaves the code
 		// and goes into the intermediate WebSocket.
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
-		if err != nil {
-			logger.Log.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
-			if errors.Is(err, syscall.EPIPE) {
+			if err != nil {
+				logger.Log.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
+				// Any socket-level write failure (EPIPE, ECONNRESET, ...) means
+				// the connection is dead — redial so entries resume flowing to
+				// the agent, e.g. after an agent pod restart.
 				logger.Log.Warning("detected socket disconnection, reestablishing socket connection")
 				connection, err = dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 				if err != nil {
@@ -288,9 +353,8 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 				} else {
 					logger.Log.Info("recovered connection successfully")
 				}
+				continue
 			}
-			continue
-		}
 	}
 }
 
@@ -329,10 +393,10 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 	for {
 		if _, message, err := socketConnection.ReadMessage(); err != nil {
 			logger.Log.Errorf("error reading message from socket connection, err: %s, (%v,%+v)", err, err, err)
-			if errors.Is(err, syscall.EPIPE) {
-				// socket has disconnected, we can safely stop this goroutine
-				return
-			}
+			// A failed websocket connection is unrecoverable; the writer side
+			// redials and starts a fresh reader. Reading again would panic
+			// (gorilla/websocket: "repeated read on failed websocket connection").
+			return
 		} else {
 			var socketMessageBase shared.WebSocketMessageMetadata
 			if err := json.Unmarshal(message, &socketMessageBase); err != nil {

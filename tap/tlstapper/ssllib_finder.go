@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 func findSsllib(procfs string, pid uint32) (string, error) {

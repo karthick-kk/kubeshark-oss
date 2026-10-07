@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/har"
 
 	"github.com/chanced/openapi"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 func exampleResolver(ref string) (*openapi.ExampleObj, error) {

@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 	basenine "github.com/up9inc/basenine/client/go"
 )
 

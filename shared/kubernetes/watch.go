@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared/debounce"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared/debounce"
 
 	"k8s.io/apimachinery/pkg/watch"
 )

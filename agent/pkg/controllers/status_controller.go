@@ -9,15 +9,15 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/api"
-	"github.com/kubeshark/kubeshark/agent/pkg/holder"
-	"github.com/kubeshark/kubeshark/agent/pkg/providers"
-	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappedPods"
-	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappers"
-	"github.com/kubeshark/kubeshark/agent/pkg/validation"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/api"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/holder"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/providers"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/providers/tappedPods"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/providers/tappers"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/validation"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
+	"github.com/karthick-kk/kubeshark-oss/shared/kubernetes"
 )
 
 func HealthCheck(c *gin.Context) {
@@ -41,6 +41,8 @@ func PostTappedPods(c *gin.Context) {
 		return
 	}
 
+	requestTappedPods = enrichContainerStatuses(requestTappedPods)
+
 	podInfos := kubernetes.GetPodInfosForPods(requestTappedPods)
 
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(requestTappedPods))
@@ -50,6 +52,50 @@ func PostTappedPods(c *gin.Context) {
 	nodeToTappedPodMap := kubernetes.GetNodeHostToTappedPodsMap(requestTappedPods)
 	tappedPods.SetNodeToTappedPodMap(nodeToTappedPodMap)
 	api.BroadcastTappedPodsToTappers(nodeToTappedPodMap)
+}
+
+// enrichContainerStatuses fills in ContainerStatuses for tap-target pods that
+// were POSTed without them. The tapper's per-PID TLS auto-discovery matches
+// /proc cgroups against pod container IDs, so without ContainerStatuses it
+// can find no container PIDs (no OpenSSL/Go TLS tappings are set up). Some
+// integrations POST minimized pods (name+IP only); the agent already watches
+// all pods, so it enriches them from its own cache.
+func enrichContainerStatuses(pods []core.Pod) []core.Pod {
+	needsEnrichment := false
+	for _, pod := range pods {
+		if len(pod.Status.ContainerStatuses) == 0 {
+			needsEnrichment = true
+			break
+		}
+	}
+
+	if !needsEnrichment {
+		return pods
+	}
+
+	resolver := holder.GetResolver()
+	if resolver == nil {
+		return pods
+	}
+
+	livePods := resolver.PodMap()
+	enriched := 0
+	for i, pod := range pods {
+		if len(pod.Status.ContainerStatuses) > 0 {
+			continue
+		}
+		if livePod, ok := livePods[fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)]; ok &&
+			len(livePod.Status.ContainerStatuses) > 0 {
+			pods[i].Status.ContainerStatuses = livePod.Status.ContainerStatuses
+			enriched++
+		}
+	}
+
+	if enriched > 0 {
+		logger.Log.Infof("Enriched container statuses for %d/%d tap-target pods", enriched, len(pods))
+	}
+
+	return pods
 }
 
 func PostTapperStatus(c *gin.Context) {

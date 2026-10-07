@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 	"github.com/stretchr/testify/assert"
 )
 

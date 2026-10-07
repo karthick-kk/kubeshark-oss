@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"regexp"
 
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -39,10 +39,8 @@ func getMinimizedPod(fullPod core.Pod) core.Pod {
 func getMinimizedContainerStatuses(fullPod core.Pod) []core.ContainerStatus {
 	result := make([]core.ContainerStatus, len(fullPod.Status.ContainerStatuses))
 
-	for i, container := range fullPod.Status.ContainerStatuses {
-		result[i] = core.ContainerStatus{
-			ContainerID: container.ContainerID,
-		}
+	for i := range fullPod.Status.ContainerStatuses {
+		result[i] = fullPod.Status.ContainerStatuses[i]  // preserve full (includes ContainerID for per-PID cgroup-v2)
 	}
 
 	return result

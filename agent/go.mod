@@ -1,4 +1,4 @@
-module github.com/kubeshark/kubeshark/agent
+module github.com/karthick-kk/kubeshark-oss/agent
 
 go 1.17
 
@@ -15,15 +15,17 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/copier v0.3.5
-	github.com/kubeshark/kubeshark/logger v0.0.0
-	github.com/kubeshark/kubeshark/shared v0.0.0
-	github.com/kubeshark/kubeshark/tap v0.0.0
-	github.com/kubeshark/kubeshark/tap/api v0.0.0
-	github.com/kubeshark/kubeshark/tap/dbgctl v0.0.0
-	github.com/kubeshark/kubeshark/tap/extensions/amqp v0.0.0
-	github.com/kubeshark/kubeshark/tap/extensions/http v0.0.0
-	github.com/kubeshark/kubeshark/tap/extensions/kafka v0.0.0
-	github.com/kubeshark/kubeshark/tap/extensions/redis v0.0.0
+	github.com/karthick-kk/kubeshark-oss/logger v0.0.0
+	github.com/karthick-kk/kubeshark-oss/shared v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/api v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/dbgctl v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/extensions/amqp v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/extensions/http v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/extensions/kafka v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/extensions/rawtcp v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/extensions/redis v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/extensions/tlsx v0.0.0
 	github.com/nav-inc/datetime v0.1.3
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v1.0.0
@@ -144,20 +146,24 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/kubeshark/kubeshark/logger v0.0.0 => ../logger
+replace github.com/karthick-kk/kubeshark-oss/logger v0.0.0 => ../logger
 
-replace github.com/kubeshark/kubeshark/shared v0.0.0 => ../shared
+replace github.com/karthick-kk/kubeshark-oss/shared v0.0.0 => ../shared
 
-replace github.com/kubeshark/kubeshark/tap v0.0.0 => ../tap
+replace github.com/karthick-kk/kubeshark-oss/tap v0.0.0 => ../tap
 
-replace github.com/kubeshark/kubeshark/tap/api v0.0.0 => ../tap/api
+replace github.com/karthick-kk/kubeshark-oss/tap/api v0.0.0 => ../tap/api
 
-replace github.com/kubeshark/kubeshark/tap/extensions/amqp v0.0.0 => ../tap/extensions/amqp
+replace github.com/karthick-kk/kubeshark-oss/tap/extensions/amqp v0.0.0 => ../tap/extensions/amqp
 
-replace github.com/kubeshark/kubeshark/tap/extensions/http v0.0.0 => ../tap/extensions/http
+replace github.com/karthick-kk/kubeshark-oss/tap/extensions/http v0.0.0 => ../tap/extensions/http
 
-replace github.com/kubeshark/kubeshark/tap/extensions/kafka v0.0.0 => ../tap/extensions/kafka
+replace github.com/karthick-kk/kubeshark-oss/tap/extensions/kafka v0.0.0 => ../tap/extensions/kafka
 
-replace github.com/kubeshark/kubeshark/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
+replace github.com/karthick-kk/kubeshark-oss/tap/extensions/rawtcp v0.0.0 => ../tap/extensions/rawtcp
 
-replace github.com/kubeshark/kubeshark/tap/dbgctl v0.0.0 => ../tap/dbgctl
+replace github.com/karthick-kk/kubeshark-oss/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
+
+replace github.com/karthick-kk/kubeshark-oss/tap/extensions/tlsx v0.0.0 => ../tap/extensions/tlsx
+
+replace github.com/karthick-kk/kubeshark-oss/tap/dbgctl v0.0.0 => ../tap/dbgctl

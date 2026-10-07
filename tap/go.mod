@@ -1,4 +1,4 @@
-module github.com/kubeshark/kubeshark/tap
+module github.com/karthick-kk/kubeshark-oss/tap
 
 go 1.17
 
@@ -9,9 +9,9 @@ require (
 	github.com/google/gopacket v1.1.19
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/knightsc/gapstone v0.0.0-20191231144527-6fa5afaf11a9
-	github.com/kubeshark/kubeshark/logger v0.0.0
-	github.com/kubeshark/kubeshark/tap/api v0.0.0
-	github.com/kubeshark/kubeshark/tap/dbgctl v0.0.0
+	github.com/karthick-kk/kubeshark-oss/logger v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/api v0.0.0
+	github.com/karthick-kk/kubeshark-oss/tap/dbgctl v0.0.0
 	github.com/moby/moby v20.10.17+incompatible
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/struCoder/pidusage v0.2.1
@@ -47,8 +47,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/kubeshark/kubeshark/logger v0.0.0 => ../logger
+replace github.com/karthick-kk/kubeshark-oss/logger v0.0.0 => ../logger
 
-replace github.com/kubeshark/kubeshark/tap/api v0.0.0 => ./api
+replace github.com/karthick-kk/kubeshark-oss/tap/api v0.0.0 => ./api
 
-replace github.com/kubeshark/kubeshark/tap/dbgctl v0.0.0 => ./dbgctl
+replace github.com/karthick-kk/kubeshark-oss/tap/dbgctl v0.0.0 => ./dbgctl

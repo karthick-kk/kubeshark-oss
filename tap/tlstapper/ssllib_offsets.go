@@ -4,7 +4,7 @@ import (
 	"debug/elf"
 
 	"github.com/go-errors/errors"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 type sslOffsets struct {

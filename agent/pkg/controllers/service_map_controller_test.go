@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
-	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/dependency"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/servicemap"
 
 	"github.com/gin-gonic/gin"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -64,7 +64,7 @@ func (s *ServiceMapControllerSuite) SetupTest() {
 
 	s.c = NewServiceMapController()
 	s.c.service.Enable()
-	s.c.service.(servicemap.ServiceMapSink).NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
+	s.c.service.(servicemap.ServiceMapSink).NewEntry(&tapApi.Entry{Source: TCPEntryA, Destination: TCPEntryB, ElapsedTime: 12, RequestSize: 128, ResponseSize: 256}, ProtocolHttp)
 
 	s.w = httptest.NewRecorder()
 	s.g, _ = gin.CreateTestContext(s.w)
@@ -123,10 +123,13 @@ func (s *ServiceMapControllerSuite) TestGet() {
 	// response edges
 	assert.Equal([]servicemap.ServiceMapEdge{
 		{
-			Source:      aNode,
-			Destination: bNode,
-			Protocol:    ProtocolHttp,
-			Count:       1,
+			Source:        aNode,
+			Destination:   bNode,
+			Protocol:      ProtocolHttp,
+			Count:         1,
+			AvgLatency:    12,
+			RequestBytes:  128,
+			ResponseBytes: 256,
 		},
 	}, response.Edges)
 }

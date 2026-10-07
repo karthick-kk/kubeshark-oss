@@ -5,9 +5,9 @@ import (
 
 	"github.com/chanced/openapi"
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
-	"github.com/kubeshark/kubeshark/agent/pkg/oas"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/dependency"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/oas"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 func GetOASServers(c *gin.Context) {

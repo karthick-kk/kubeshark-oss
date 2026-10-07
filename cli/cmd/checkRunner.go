@@ -5,10 +5,10 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/kubeshark/kubeshark/cli/cmd/check"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/cli/cmd/check"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/uiUtils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 var (

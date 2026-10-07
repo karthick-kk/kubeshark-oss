@@ -89,7 +89,9 @@ COPY tap/dbgctl/go.mod ../tap/dbgctl/
 COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
 COPY tap/extensions/http/go.mod ../tap/extensions/http/
 COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
+COPY tap/extensions/rawtcp/go.mod ../tap/extensions/rawtcp/
 COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
+COPY tap/extensions/tlsx/go.mod ../tap/extensions/tlsx/
 RUN go mod download
 
 # Copy and build agent code
@@ -110,10 +112,10 @@ RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 WORKDIR /app/agent-build
 
 RUN go build -ldflags="-extldflags=-static -s -w \
-    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
-    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.Branch=${GIT_BRANCH}' \
-    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.Ver=${VER}'" -o kubesharkagent .
+    -X 'github.com/karthick-kk/kubeshark-oss/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
+    -X 'github.com/karthick-kk/kubeshark-oss/agent/pkg/version.Branch=${GIT_BRANCH}' \
+    -X 'github.com/karthick-kk/kubeshark-oss/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
+    -X 'github.com/karthick-kk/kubeshark-oss/agent/pkg/version.Ver=${VER}'" -o kubesharkagent .
 
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.8.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}

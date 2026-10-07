@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/controllers"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/controllers"
 )
 
 // EntriesRoutes defines the group of har entries routes.

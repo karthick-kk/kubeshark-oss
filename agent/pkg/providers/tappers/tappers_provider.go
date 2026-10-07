@@ -4,9 +4,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/utils"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/utils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 )
 
 const FilePath = shared.DataDirPath + "tappers-status.json"

@@ -246,6 +246,21 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
                     </span>
                 </Queryable>
             </div>
+            {!headingMode && <div className={styles.latency}>
+                <Queryable
+                        query={`elapsedTime >= ${entry.latency}`}
+                        displayIconOnMouseOver={true}
+                        flipped={false}
+                        style={{position: "relative"}}
+                >
+                    <span
+                        className={`${styles.tcpInfo}`}
+                        title="Latency (ms)"
+                    >
+                        {entry.latency}ms
+                    </span>
+                </Queryable>
+            </div>}
             <div className={styles.timestamp}>
                 <Queryable
                         query={`timestamp >= datetime("${Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}")`}

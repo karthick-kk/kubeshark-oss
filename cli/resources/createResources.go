@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
+	"github.com/karthick-kk/kubeshark-oss/cli/errormessage"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark"
+	"github.com/karthick-kk/kubeshark-oss/cli/uiUtils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
+	"github.com/karthick-kk/kubeshark-oss/shared/kubernetes"
 	"github.com/op/go-logging"
 	core "k8s.io/api/core/v1"
 )

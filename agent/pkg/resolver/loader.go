@@ -19,5 +19,5 @@ func NewFromInCluster(errOut chan error, namespace string) (*Resolver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Resolver{clientConfig: config, clientSet: clientSet, nameMap: cmap.New(), serviceMap: cmap.New(), errOut: errOut, namespace: namespace}, nil
+	return &Resolver{clientConfig: config, clientSet: clientSet, nameMap: cmap.New(), serviceMap: cmap.New(), podCache: cmap.New(), errOut: errOut, namespace: namespace}, nil
 }

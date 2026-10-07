@@ -3,11 +3,11 @@ package check
 import (
 	"fmt"
 
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
-	"github.com/kubeshark/kubeshark/shared/semver"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/uiUtils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared/kubernetes"
+	"github.com/karthick-kk/kubeshark-oss/shared/semver"
 )
 
 func KubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {

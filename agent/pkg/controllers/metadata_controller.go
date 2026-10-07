@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/version"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/version"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 )
 
 func GetVersion(c *gin.Context) {

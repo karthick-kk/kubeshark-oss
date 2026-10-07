@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/google/gopacket"

@@ -2,7 +2,7 @@ package oas
 
 import (
 	"encoding/json"
-	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/har"
 	"testing"
 	"time"
 )

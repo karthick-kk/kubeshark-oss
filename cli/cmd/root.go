@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
-	"github.com/kubeshark/kubeshark/cli/kubeshark/version"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark/fsUtils"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark/version"
+	"github.com/karthick-kk/kubeshark-oss/cli/uiUtils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 	Use:   "kubeshark",
 	Short: "A web traffic viewer for kubernetes",
 	Long: `A web traffic viewer for kubernetes
-Further info is available at https://github.com/kubeshark/kubeshark`,
+Further info is available at https://github.com/karthick-kk/kubeshark-oss`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.InitConfig(cmd); err != nil {
 			logger.Log.Fatal(err)

@@ -5,8 +5,8 @@ import (
 
 	"github.com/jinzhu/copier"
 
-	"github.com/kubeshark/kubeshark/logger"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 const (
@@ -33,7 +33,7 @@ type defaultServiceMap struct {
 }
 
 type ServiceMapSink interface {
-	NewTCPEntry(source *tapApi.TCP, destination *tapApi.TCP, protocol *tapApi.Protocol)
+	NewEntry(entry *tapApi.Entry, protocol *tapApi.Protocol)
 }
 
 type ServiceMap interface {
@@ -73,6 +73,12 @@ type nodeData struct {
 type edgeProtocol struct {
 	protocol *tapApi.Protocol
 	count    int
+	// Per-protocol latency/bytes aggregates feed the edge KPIs. latencySumMs
+	// is the raw sum of entry elapsed times so the mean is exact; RequestBytes
+	// / ResponseBytes accumulate the entry payload sizes.
+	latencySumMs  int64
+	requestBytes  int
+	responseBytes int
 }
 
 type edgeData struct {
@@ -99,12 +105,15 @@ func newNodeData(id int, e *tapApi.TCP) *nodeData {
 	}
 }
 
-func newEdgeData(p *tapApi.Protocol) *edgeData {
+func newEdgeData(p *tapApi.Protocol, elapsedMs int64, requestBytes, responseBytes int) *edgeData {
 	return &edgeData{
 		data: map[key]*edgeProtocol{
 			key(p.Name): {
-				protocol: p,
-				count:    1,
+				protocol:      p,
+				count:         1,
+				latencySumMs:  elapsedMs,
+				requestBytes:  requestBytes,
+				responseBytes: responseBytes,
 			},
 		},
 	}
@@ -124,7 +133,7 @@ func (s *defaultServiceMap) addNode(k key, e *tapApi.TCP) (*nodeData, bool) {
 	return nd, false
 }
 
-func (s *defaultServiceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
+func (s *defaultServiceMap) addEdge(u, v *entryData, p *tapApi.Protocol, elapsedMs int64, requestBytes, responseBytes int) {
 	if n, ok := s.addNode(u.key, u.entry); !ok {
 		n.count++
 	}
@@ -146,16 +155,22 @@ func (s *defaultServiceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
 		if pd, pOk := e.data[k]; pOk {
 			// protocol key already exists, just increment the count
 			pd.count++
+			pd.latencySumMs += elapsedMs
+			pd.requestBytes += requestBytes
+			pd.responseBytes += responseBytes
 		} else {
 			// new protocol key
 			e.data[k] = &edgeProtocol{
-				protocol: p,
-				count:    1,
+				protocol:      p,
+				count:         1,
+				latencySumMs:  elapsedMs,
+				requestBytes:  requestBytes,
+				responseBytes: responseBytes,
 			}
 		}
 	} else {
 		// new edge data for u -> v pair
-		s.graph.Edges[u.key][v.key] = newEdgeData(p)
+		s.graph.Edges[u.key][v.key] = newEdgeData(p, elapsedMs, requestBytes, responseBytes)
 	}
 
 	s.entriesProcessed++
@@ -174,10 +189,13 @@ func (s *defaultServiceMap) IsEnabled() bool {
 	return s.enabled
 }
 
-func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Protocol) {
+func (s *defaultServiceMap) NewEntry(entry *tapApi.Entry, p *tapApi.Protocol) {
 	if !s.IsEnabled() {
 		return
 	}
+
+	src := entry.Source
+	dst := entry.Destination
 
 	var srcEntry *entryData
 	var dstEntry *entryData
@@ -216,7 +234,7 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 		}
 	}
 
-	s.addEdge(srcEntry, dstEntry, p)
+	s.addEdge(srcEntry, dstEntry, p, entry.ElapsedTime, entry.RequestSize, entry.ResponseSize)
 }
 
 func (s *defaultServiceMap) GetStatus() ServiceMapStatus {
@@ -255,6 +273,10 @@ func (s *defaultServiceMap) GetEdges() []ServiceMapEdge {
 	for u, m := range s.graph.Edges {
 		for v := range m {
 			for _, p := range s.graph.Edges[u][v].data {
+				avgLatency := int64(0)
+				if p.count > 0 {
+					avgLatency = p.latencySumMs / int64(p.count)
+				}
 				edges = append(edges, ServiceMapEdge{
 					Source: ServiceMapNode{
 						Id:       s.graph.Nodes[u].id,
@@ -270,8 +292,11 @@ func (s *defaultServiceMap) GetEdges() []ServiceMapEdge {
 						Resolved: s.graph.Nodes[v].entry.Name != UnresolvedNodeName,
 						Count:    s.graph.Nodes[v].count,
 					},
-					Count:    p.count,
-					Protocol: p.protocol,
+					Count:         p.count,
+					Protocol:      p.protocol,
+					AvgLatency:    avgLatency,
+					RequestBytes:  p.requestBytes,
+					ResponseBytes: p.responseBytes,
 				})
 			}
 		}

@@ -3,7 +3,7 @@ package http
 import (
 	"sync"
 
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 type tcpStream struct {

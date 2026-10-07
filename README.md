@@ -1,95 +1,86 @@
-<p align="center">
-  <img src="assets/kubeshark-logo.svg" alt="Kubeshark: Traffic viewer for Kubernetes." height="128px"/>
-</p>
+# kubeshark-oss
 
-<p align="center">
-    <a href="https://github.com/kubeshark/kubeshark/blob/main/LICENSE">
-        <img alt="GitHub License" src="https://img.shields.io/github/license/kubeshark/kubeshark?logo=GitHub&style=flat-square">
-    </a>
-    <a href="https://github.com/kubeshark/kubeshark/releases/latest">
-        <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/kubeshark/kubeshark?logo=GitHub&style=flat-square">
-    </a>
-    <a href="https://hub.docker.com/r/kubeshark/kubeshark">
-      <img alt="Docker pulls" src="https://img.shields.io/docker/pulls/kubeshark/kubeshark?color=%23099cec&logo=Docker&style=flat-square">
-    </a>
-    <a href="https://hub.docker.com/r/kubeshark/kubeshark">
-      <img alt="Image size" src="https://img.shields.io/docker/image-size/kubeshark/kubeshark/latest?logo=Docker&style=flat-square">
-    </a>
-    <a href="https://join.slack.com/t/mertyildiran/shared_invite/zt-1k3sybpq9-uAhFkuPJiJftKniqrGHGhg">
-      <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
-    </a>
-</p>
+An open-source fork of **Kubeshark 37.0** — the last release of the
+Kubernetes traffic viewer where the full stack (agent, tapper, CLI, UI)
+was published under the Apache License 2.0.
 
-Kubeshark is an **observability and monitoring tool for** [**Kubernetes**](https://kubernetes.io/), enabling **dynamic analysis** of the microservices, detecting **anomalies** and **triggering functions** when certain patterns appear in runtime.
+This project re-implements features that shipped in later, closed-source
+Kubeshark versions, keeping the tool fully self-hosted with no license
+gate and no required cloud connectivity. It is an independent,
+unaffiliated fork. See [NOTICE](NOTICE) for provenance and
+licensing.
 
-Think of Kubeshark as a **Kubernetes-aware** combination of [**Wireshark**](https://www.wireshark.org/), [**BPF Compiler Collection (BCC) tools**](https://github.com/iovisor/bcc) and beyond.
+## Why this fork
 
-![Simple UI](assets/kubeshark-ui.png)
+Upstream Kubeshark split its components and moved the hub, worker and
+front-end binaries to a Business Source License with a server-side
+license requirement (a time-boxed 403 gate that forces a sign-up). The
+`37.0` release (Nov 2022) predates that split and is fully Apache-2.0.
+This fork restores and extends that base.
 
-## Quickstart
+## What's in it
 
-Installing Kubeshark can't be any easier. Either choose the right binary, download and use directly from [the releases section](https://github.com/kubeshark/kubeshark/releases/), or use a shell script to download the right binary for your operating system and CPU architecture:
+Inherited from the 37.0 base (working as-is):
 
-```shell
-sh <(curl -Ls https://kubeshark.co/install)
-```
+- Live traffic viewer with dissection for HTTP/1.x, HTTP/2, gRPC, AMQP,
+  Kafka and Redis.
+- Display filters (CEL-style), per-entry PCAP, request replay,
+  OpenAPI (OAS) generation and traffic statistics.
+- `basenine` (Lindb) as the entries store; in-cluster agent + tapper
+  DaemonSet topology.
+- The eBPF-based TLS tapper (`--tls` / `--servicemesh`) that hooks
+  OpenSSL, Go `crypto/tls` and BoringSSL/Envoy for decrypted traffic.
 
-## Deploy
+Being added (milestones below):
 
-Once you have the Kubeshark CLI installed on your system, run the command below to deploy the Kubeshark container into your Kubernetes cluster.
+- **L4 visibility** — raw TCP flows appear as entries (5-tuple,
+  direction, bytes, latency) and the capture BPF filter's hardcoded
+  `port not 443` exclusion becomes opt-out, so TLS front-door legs are
+  captured.
+- **Workload Dependency Map** — the service map edges now carry
+  per-dependency KPIs: average round-trip latency and cumulative bytes
+  in/out alongside the request count, shown in an edge hover tooltip.
+- **TLSX handshake dissection** — SNI, ALPN, cipher suites and TLS
+  version parsed from the handshake even when the payload stays
+  encrypted.
 
-```shell
-kubeshark tap
-```
-### Troubleshooting Installation
-If something doesn't work or simply to play it safe prior to installing, make sure that:
+## Roadmap
 
-> Kubeshark images are hosted on Docker Hub. Make sure you have access to https://hub.docker.com/
+- **M1** — L4 raw-TCP entries, `:443` capture fix, Workload Dependency
+  Map, TLSX handshake dissection, and live-verified TLS decryption
+  (OpenSSL + Go; BoringSSL/Envoy best-effort).
+- **M2** — raw UDP entries, cluster-wide PCAP/snapshots, additional
+  dissectors (MySQL/PostgreSQL/MongoDB, WebSocket, ICMP), BoringSSL
+  offset database for custom builds, an MCP server + AI skills,
+  eBPF-default capture, and service-map extensions (namespace/workload
+  node grouping, p95 latency, per-edge HTTP error counts).
 
-> Make sure `kubeshark` executable in your `PATH`.
+## Building
 
-### Select Pods
-
-#### Monitoring a Specific Pod:
-
-```shell
-kubeshark tap catalogue-b87b45784-sxc8q
-```
-
-#### Monitoring a Set of Pods Using Regex:
-
-```shell
-kubeshark tap "(catalo*|front-end*)"
-```
-
-### Specify the Namespace
-
-By default, Kubeshark is deployed into the `default` namespace.
-To specify a different namespace:
+The image is built from the [`Dockerfile`](Dockerfile). It compiles the
+agent (with the eBPF TLS-tapper objects) and the React UI, then layers
+the `basenine` binary and the prebuilt UI site.
 
 ```
-kubeshark tap -n sock-shop
+docker build -t kubeshark-oss:37.0-oss.0 .
 ```
 
-### Specify All Namespaces
-
-The default deployment strategy of Kubeshark waits for the new pods
-to be created. To simply deploy to all existing namespaces run:
+The Go modules are per-directory (`tap/`, `agent/`, `cli/`, `shared/`,
+`logger/`, `tap/api/`, `tap/dbgctl/`, and the `tap/extensions/*`
+dissectors). Run tests from each module directory:
 
 ```
-kubeshark tap -A
+cd agent && go test ./...
+cd tap   && go test ./...
 ```
 
-## Documentation
+## Relationship to upstream
 
-Visit our documentation website: [docs.kubeshark.co](https://docs.kubeshark.co)
+- **Base:** [kubeshark/kubeshark](https://github.com/kubeshark/kubeshark)
+  tag `37.0`, Apache-2.0.
+- This is a re-implementation of post-37.0 features guided by public
+  documentation; it does not include closed-source upstream code.
 
-The documentation resources are open-source and can be found on GitHub: [kubeshark/docs](https://github.com/kubeshark/docs)
+## License
 
-## Contributing
-
-We ❤️ pull requests! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for the contribution guide.
-
-## Code of Conduct
-
-This project is for everyone. We ask that our users and contributors take a few minutes to review our [Code of Conduct](docs/CODE_OF_CONDUCT.md).
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

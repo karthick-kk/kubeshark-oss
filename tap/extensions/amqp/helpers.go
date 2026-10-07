@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 var connectionMethodMap = map[int]string{

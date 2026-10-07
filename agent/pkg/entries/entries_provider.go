@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/app"
-	"github.com/kubeshark/kubeshark/agent/pkg/models"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/app"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/models"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
 	basenine "github.com/up9inc/basenine/client/go"
 )
 

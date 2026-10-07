@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 // Key is `{src_ip}_{dst_ip}_{src_ip}_{src_port}_{incremental_counter}`

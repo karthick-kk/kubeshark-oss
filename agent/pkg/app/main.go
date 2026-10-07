@@ -6,16 +6,18 @@ import (
 	"time"
 
 	"github.com/antelman107/net-wait-go/wait"
-	"github.com/kubeshark/kubeshark/agent/pkg/api"
-	"github.com/kubeshark/kubeshark/agent/pkg/providers"
-	"github.com/kubeshark/kubeshark/agent/pkg/utils"
-	"github.com/kubeshark/kubeshark/logger"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
-	"github.com/kubeshark/kubeshark/tap/dbgctl"
-	amqpExt "github.com/kubeshark/kubeshark/tap/extensions/amqp"
-	httpExt "github.com/kubeshark/kubeshark/tap/extensions/http"
-	kafkaExt "github.com/kubeshark/kubeshark/tap/extensions/kafka"
-	redisExt "github.com/kubeshark/kubeshark/tap/extensions/redis"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/api"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/providers"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/utils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/dbgctl"
+	amqpExt "github.com/karthick-kk/kubeshark-oss/tap/extensions/amqp"
+	httpExt "github.com/karthick-kk/kubeshark-oss/tap/extensions/http"
+	kafkaExt "github.com/karthick-kk/kubeshark-oss/tap/extensions/kafka"
+	rawtcpExt "github.com/karthick-kk/kubeshark-oss/tap/extensions/rawtcp"
+	redisExt "github.com/karthick-kk/kubeshark-oss/tap/extensions/redis"
+	tlsxExt "github.com/karthick-kk/kubeshark-oss/tap/extensions/tlsx"
 	"github.com/op/go-logging"
 	basenine "github.com/up9inc/basenine/client/go"
 )
@@ -75,6 +77,33 @@ func LoadExtensions() {
 		for k, v := range protocolsRedis {
 			ProtocolsMap[k] = v
 		}
+	}
+
+	// Fallback dissectors, always loaded so connections no L7 dissector
+	// (http/amqp/kafka/redis) identified still surface as entries:
+	//   - tlsx (priority 50): claims a stream on a real TLS handshake and
+	//     reports SNI/ALPN/version.
+	//   - rawtcp (priority 99): terminal catch-all for everything else.
+	extensionTlsx := &tapApi.Extension{}
+	dissectorTlsx := tlsxExt.NewDissector()
+	dissectorTlsx.Register(extensionTlsx)
+	extensionTlsx.Dissector = dissectorTlsx
+	Extensions = append(Extensions, extensionTlsx)
+	ExtensionsMap[extensionTlsx.Protocol.Name] = extensionTlsx
+	protocolsTlsx := dissectorTlsx.GetProtocols()
+	for k, v := range protocolsTlsx {
+		ProtocolsMap[k] = v
+	}
+
+	extensionRawTcp := &tapApi.Extension{}
+	dissectorRawTcp := rawtcpExt.NewDissector()
+	dissectorRawTcp.Register(extensionRawTcp)
+	extensionRawTcp.Dissector = dissectorRawTcp
+	Extensions = append(Extensions, extensionRawTcp)
+	ExtensionsMap[extensionRawTcp.Protocol.Name] = extensionRawTcp
+	protocolsRawTcp := dissectorRawTcp.GetProtocols()
+	for k, v := range protocolsRawTcp {
+		ProtocolsMap[k] = v
 	}
 
 	sort.Slice(Extensions, func(i, j int) bool {

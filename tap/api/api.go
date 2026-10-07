@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/tap/dbgctl"
+	"github.com/karthick-kk/kubeshark-oss/tap/dbgctl"
 )
 
 const UnknownNamespace = ""

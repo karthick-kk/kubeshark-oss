@@ -3,14 +3,14 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
-	"github.com/kubeshark/kubeshark/agent/pkg/entries"
-	"github.com/kubeshark/kubeshark/agent/pkg/models"
-	"github.com/kubeshark/kubeshark/agent/pkg/validation"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/dependency"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/entries"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/models"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/validation"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 func HandleEntriesError(c *gin.Context, err error) bool {
@@ -33,10 +33,12 @@ func GetEntries(c *gin.Context) {
 
 	if err := c.BindQuery(entriesRequest); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		return
 	}
 	validationError := validation.Validate(entriesRequest)
 	if validationError != nil {
 		c.JSON(http.StatusBadRequest, validationError)
+		return
 	}
 
 	if entriesRequest.TimeoutMs == 0 {
@@ -62,10 +64,12 @@ func GetEntry(c *gin.Context) {
 
 	if err := c.BindQuery(singleEntryRequest); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		return
 	}
 	validationError := validation.Validate(singleEntryRequest)
 	if validationError != nil {
 		c.JSON(http.StatusBadRequest, validationError)
+		return
 	}
 
 	id := c.Param("id")

@@ -33,6 +33,9 @@ export interface ServiceMapEdge {
     destination: ServiceMapNode;
     count: number;
     protocol: Protocol;
+    avgLatency?: number;
+    requestBytes?: number;
+    responseBytes?: number;
 }
 
 export interface ServiceMapGraph {

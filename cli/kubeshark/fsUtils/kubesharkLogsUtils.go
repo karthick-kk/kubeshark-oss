@@ -8,10 +8,10 @@ import (
 	"path"
 	"regexp"
 
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared/kubernetes"
 )
 
 func GetLogFilePath() string {

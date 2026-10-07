@@ -8,23 +8,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cli/resources"
-	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/karthick-kk/kubeshark-oss/cli/resources"
+	"github.com/karthick-kk/kubeshark-oss/cli/utils"
 
 	core "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kubeshark/kubeshark/cli/apiserver"
-	"github.com/kubeshark/kubeshark/cli/cmd/goUtils"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/cli/apiserver"
+	"github.com/karthick-kk/kubeshark-oss/cli/cmd/goUtils"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/config/configStructs"
+	"github.com/karthick-kk/kubeshark-oss/cli/errormessage"
+	"github.com/karthick-kk/kubeshark-oss/cli/uiUtils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
+	"github.com/karthick-kk/kubeshark-oss/shared/kubernetes"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 const cleanupTimeout = time.Minute

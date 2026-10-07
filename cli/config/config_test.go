@@ -2,7 +2,7 @@ package config_test
 
 import (
 	"fmt"
-	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
 	"gopkg.in/yaml.v3"
 	"reflect"
 	"strings"

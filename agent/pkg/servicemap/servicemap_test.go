@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -81,6 +81,18 @@ var (
 	}
 )
 
+// newTestEntry builds the minimal *tapApi.Entry the sink consumes from a
+// source and destination TCP endpoint, carrying the KPI fields under test.
+func newTestEntry(src, dst *tapApi.TCP) *tapApi.Entry {
+	return &tapApi.Entry{
+		Source:       src,
+		Destination:  dst,
+		ElapsedTime:  0,
+		RequestSize:  0,
+		ResponseSize: 0,
+	}
+}
+
 type ServiceMapDisabledSuite struct {
 	suite.Suite
 
@@ -140,8 +152,8 @@ func (s *ServiceMapDisabledSuite) TestGetStatusShouldReturnDisabledByDefault() {
 func (s *ServiceMapDisabledSuite) TestNewTCPEntryShouldDoNothingWhenDisabled() {
 	assert := s.Assert()
 
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
-	s.instance.NewTCPEntry(TCPEntryC, TCPEntryD, ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryA, TCPEntryB), ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryC, TCPEntryD), ProtocolHttp)
 	status := s.instance.GetStatus()
 
 	assert.Equal("disabled", status.Status)
@@ -164,7 +176,7 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert := s.Assert()
 
 	// A -> B - HTTP
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryA, TCPEntryB), ProtocolHttp)
 
 	nodes := s.instance.GetNodes()
 	edges := s.instance.GetEdges()
@@ -180,7 +192,7 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert.Equal(ProtocolHttp.Name, edges[0].Protocol.Name)
 
 	// same A -> B - HTTP, http protocol count should be 2, edges count should be 1
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryA, TCPEntryB), ProtocolHttp)
 
 	nodes = s.instance.GetNodes()
 	edges = s.instance.GetEdges()
@@ -197,7 +209,7 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert.Equal(ProtocolHttp.Name, edges[0].Protocol.Name)
 
 	// same A -> B - REDIS, http protocol count should be 2 and redis protocol count should 1, edges count should be 2
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolRedis)
+	s.instance.NewEntry(newTestEntry(TCPEntryA, TCPEntryB), ProtocolRedis)
 
 	nodes = s.instance.GetNodes()
 	edges = s.instance.GetEdges()
@@ -231,10 +243,10 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert.Equal(ProtocolRedis.Name, edges[redisIndex].Protocol.Name)
 
 	// other entries
-	s.instance.NewTCPEntry(TCPEntryUnresolved, TCPEntryA, ProtocolHttp)
-	s.instance.NewTCPEntry(TCPEntryB, TCPEntryUnresolved2, ProtocolHttp)
-	s.instance.NewTCPEntry(TCPEntryC, TCPEntryD, ProtocolHttp)
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryC, ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryUnresolved, TCPEntryA), ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryB, TCPEntryUnresolved2), ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryC, TCPEntryD), ProtocolHttp)
+	s.instance.NewEntry(newTestEntry(TCPEntryA, TCPEntryC), ProtocolHttp)
 
 	status := s.instance.GetStatus()
 	nodes = s.instance.GetNodes()
@@ -411,6 +423,35 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 
 	// Edges after reset
 	assert.Equal([]ServiceMapEdge{}, edges)
+}
+
+func (s *ServiceMapEnabledSuite) TestNewEntryAggregatesEdgeKPIs() {
+	assert := s.Assert()
+	s.instance.Enable()
+	defer s.instance.Reset()
+
+	// Two entries on the same a->b edge (same protocol) with different
+	// elapsed times and byte sizes. The edge KPIs must be the mean latency and
+	// the summed bytes.
+	s.instance.NewEntry(&tapApi.Entry{Source: TCPEntryA, Destination: TCPEntryB, ElapsedTime: 10, RequestSize: 100, ResponseSize: 200}, ProtocolHttp)
+	s.instance.NewEntry(&tapApi.Entry{Source: TCPEntryA, Destination: TCPEntryB, ElapsedTime: 30, RequestSize: 300, ResponseSize: 400}, ProtocolHttp)
+
+	// A third, unrelated edge must not bleed its latency/bytes into a->b.
+	s.instance.NewEntry(&tapApi.Entry{Source: TCPEntryC, Destination: TCPEntryD, ElapsedTime: 5, RequestSize: 1, ResponseSize: 1}, ProtocolHttp)
+
+	edges := s.instance.GetEdges()
+	var abEdge *ServiceMapEdge
+	for i := range edges {
+		if edges[i].Source.Entry.Name == a && edges[i].Destination.Entry.Name == b {
+			abEdge = &edges[i]
+		}
+	}
+	if assert.NotNil(abEdge) {
+		assert.Equal(2, abEdge.Count)
+		assert.Equal(int64(20), abEdge.AvgLatency, "avg latency = (10+30)/2")
+		assert.Equal(400, abEdge.RequestBytes)
+		assert.Equal(600, abEdge.ResponseBytes)
+	}
 }
 
 func TestServiceMapSuite(t *testing.T) {

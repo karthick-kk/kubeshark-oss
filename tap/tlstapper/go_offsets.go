@@ -12,7 +12,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/cilium/ebpf/link"
 	"github.com/knightsc/gapstone"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 type goAbi int

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 )
 
 var protocol = api.Protocol{

@@ -4,12 +4,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/config/configStructs"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark"
 	"github.com/spf13/cobra"
 )
 

@@ -6,15 +6,15 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
-	"github.com/kubeshark/kubeshark/agent/pkg/models"
-	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappedPods"
-	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappers"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/dependency"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/models"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/providers/tappedPods"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/providers/tappers"
 
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 )
 
 type BrowserClient struct {

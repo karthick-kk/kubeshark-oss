@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/app"
-	"github.com/kubeshark/kubeshark/agent/pkg/config"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/app"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/config"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 	basenine "github.com/up9inc/basenine/client/go"
 )
 

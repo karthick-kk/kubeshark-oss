@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/cli/config"
+	"github.com/karthick-kk/kubeshark-oss/cli/config/configStructs"
+	"github.com/karthick-kk/kubeshark-oss/cli/errormessage"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 	"github.com/spf13/cobra"
 )
 

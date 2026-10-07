@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubeshark/kubeshark/agent/pkg/replay"
-	"github.com/kubeshark/kubeshark/agent/pkg/validation"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/replay"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/validation"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 const (

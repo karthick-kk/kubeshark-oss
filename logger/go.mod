@@ -1,4 +1,4 @@
-module github.com/kubeshark/kubeshark/logger
+module github.com/karthick-kk/kubeshark-oss/logger
 
 go 1.17
 

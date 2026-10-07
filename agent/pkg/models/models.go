@@ -3,10 +3,10 @@ package models
 import (
 	"encoding/json"
 
-	"github.com/kubeshark/kubeshark/agent/pkg/har"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/har"
+	tapApi "github.com/karthick-kk/kubeshark-oss/tap/api"
 
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 	basenine "github.com/up9inc/basenine/client/go"
 )
 

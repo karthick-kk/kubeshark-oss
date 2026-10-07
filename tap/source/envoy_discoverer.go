@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 	v1 "k8s.io/api/core/v1"
 )
 

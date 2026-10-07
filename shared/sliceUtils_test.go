@@ -2,7 +2,7 @@ package shared_test
 
 import (
 	"fmt"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/karthick-kk/kubeshark-oss/shared"
 	"reflect"
 	"testing"
 )

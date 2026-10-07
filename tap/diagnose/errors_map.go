@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/google/gopacket/examples/util"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 )
 
 var TapErrors *errorsMap

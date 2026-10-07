@@ -11,7 +11,7 @@ import filterIconClicked from "assets/filter-icon-clicked.svg";
 import closeIcon from "assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../../UI/SelectList/SelectList";
-import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
+import { GraphData, ServiceMapGraph, ServiceMapEdge } from "./ServiceMapModalTypes"
 import { Utils } from "../../../helpers/Utils";
 import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
 import Resizeable from "../../UI/Resizeable/Resizeable"
@@ -35,6 +35,29 @@ const modalStyle = {
 
 const protocolDisplayNameMap = {
     "GQL": "GraphQL"
+}
+
+const formatBytes = (n?: number) => {
+    if (n === undefined || n === 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB"];
+    let i = 0;
+    let v = n;
+    while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+    return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+}
+
+// Build the edge hover tooltip: protocol + request count, plus the KPIs
+// (average latency and bytes in/out) when the backend reports them.
+const edgeTooltip = (edge: ServiceMapEdge) => {
+    const lines = [
+        `Protocol: ${protocolDisplayNameMap[edge.protocol.abbr] || edge.protocol.abbr}`,
+        `Requests: ${edge.count}`,
+    ];
+    if (edge.avgLatency !== undefined) {
+        lines.push(`Avg latency: ${edge.avgLatency} ms`);
+        lines.push(`In: ${formatBytes(edge.requestBytes)} · Out: ${formatBytes(edge.responseBytes)}`);
+    }
+    return lines.join("\n");
 }
 
 interface LegentLabelProps {
@@ -105,11 +128,17 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     const mapEdgesDatatoGraph = edge => {
+        // request count + average latency on the label itself — latency used
+        // to be hover-tooltip-only, easy to miss on thin curved edges
+        const label = edge.avgLatency !== undefined
+            ? `${edge.count} (${edge.avgLatency}ms)`
+            : edge.count.toString();
         return {
             from: edge.source.id,
             to: edge.destination.id,
             value: edge.count,
-            label: edge.count.toString(),
+            label,
+            title: edgeTooltip(edge),
             color: {
                 color: edge.protocol.backgroundColor,
                 highlight: edge.protocol.backgroundColor

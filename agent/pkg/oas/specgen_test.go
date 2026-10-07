@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/chanced/openapi"
-	"github.com/kubeshark/kubeshark/agent/pkg/har"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/agent/pkg/har"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 	"github.com/wI2L/jsondiff"
 )
 
@@ -53,9 +53,20 @@ func TestEntries(t *testing.T) {
 	loadStartingOAS("test_artifacts/catalogue.json", "catalogue", gen.serviceSpecs)
 	loadStartingOAS("test_artifacts/trcc.json", "trcc-api-service", gen.serviceSpecs)
 
+	done := make(chan struct{})
+	stopped := make(chan struct{})
+	defer func() {
+		close(done)
+		<-stopped
+	}()
 	go func() {
+		defer close(stopped)
 		for {
-			time.Sleep(1 * time.Second)
+			select {
+			case <-done:
+				return
+			case <-time.After(1 * time.Second):
+			}
 			gen.serviceSpecs.Range(func(key, val interface{}) bool {
 				svc := key.(string)
 				t.Logf("Getting spec for %s", svc)

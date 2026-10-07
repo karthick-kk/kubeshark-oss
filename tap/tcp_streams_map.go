@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/tap/api"
-	"github.com/kubeshark/kubeshark/tap/diagnose"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/tap/diagnose"
 )
 
 type tcpStreamMap struct {

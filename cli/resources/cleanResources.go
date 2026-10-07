@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/cli/utils"
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
+	"github.com/karthick-kk/kubeshark-oss/cli/errormessage"
+	"github.com/karthick-kk/kubeshark-oss/cli/kubeshark/fsUtils"
+	"github.com/karthick-kk/kubeshark-oss/cli/uiUtils"
+	"github.com/karthick-kk/kubeshark-oss/cli/utils"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/shared/kubernetes"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 

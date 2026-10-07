@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	cmap "github.com/orcaman/concurrent-map"
@@ -25,6 +25,7 @@ type Resolver struct {
 	clientSet    *kubernetes.Clientset
 	nameMap      cmap.ConcurrentMap
 	serviceMap   cmap.ConcurrentMap
+	podCache     cmap.ConcurrentMap
 	isStarted    bool
 	errOut       chan error
 	namespace    string
@@ -64,6 +65,17 @@ func (resolver *Resolver) CheckIsServiceIP(address string) bool {
 
 func (resolver *Resolver) watchPods(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
+	// Seed the pod cache with the current pod list so it is complete even
+	// before the first watch event arrives (e.g. right after a restart).
+	currentPods, err := resolver.clientSet.CoreV1().Pods(resolver.namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for i := range currentPods.Items {
+		pod := &currentPods.Items[i]
+		resolver.podCache.Set(fmt.Sprintf("%s/%s", pod.Namespace, pod.Name), pod)
+	}
+
 	watcher, err := resolver.clientSet.CoreV1().Pods(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
@@ -74,9 +86,13 @@ func (resolver *Resolver) watchPods(ctx context.Context) error {
 			if event.Object == nil {
 				return errors.New("error in kubectl pod watch")
 			}
+			pod := event.Object.(*corev1.Pod)
+			key := fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)
 			if event.Type == watch.Deleted {
-				pod := event.Object.(*corev1.Pod)
+				resolver.podCache.Remove(key)
 				resolver.saveResolvedName(pod.Status.PodIP, "", pod.Namespace, event.Type)
+			} else {
+				resolver.podCache.Set(key, pod)
 			}
 		case <-ctx.Done():
 			watcher.Stop()
@@ -205,4 +221,18 @@ func (resolver *Resolver) infiniteErrorHandleRetryFunc(ctx context.Context, fun 
 			return
 		}
 	}
+}
+
+// PodMap returns the currently-known pods (from the pod watch) as a
+// namespace/name -> Pod map with live status (ContainerStatuses included).
+// Used to enrich tap-target pods that arrive without container statuses,
+// which the tapper's per-PID TLS auto-discovery requires.
+func (resolver *Resolver) PodMap() map[string]*corev1.Pod {
+	pods := make(map[string]*corev1.Pod)
+	for key, v := range resolver.podCache.Items() {
+		if pod, ok := v.(*corev1.Pod); ok {
+			pods[key] = pod
+		}
+	}
+	return pods
 }

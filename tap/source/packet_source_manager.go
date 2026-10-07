@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/karthick-kk/kubeshark-oss/logger"
+	"github.com/karthick-kk/kubeshark-oss/tap/api"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -131,6 +131,10 @@ func buildBPFExpr(pods []v1.Pod) string {
 		hostsFilter = append(hostsFilter, fmt.Sprintf("host %s", pod.Status.PodIP))
 	}
 
+	if disablePort443Filter() {
+		return strings.Join(hostsFilter, " or ")
+	}
+
 	return fmt.Sprintf("%s and port not 443", strings.Join(hostsFilter, " or "))
 }
 
@@ -143,6 +147,12 @@ func (m *PacketSourceManager) setBPFFilter(pods []v1.Pod) {
 	var expr string
 
 	if len(pods) > bpfFilterMaxPods {
+		if disablePort443Filter() {
+			// No host list to build and no 443 exclusion to apply — nothing
+			// to filter on, so leave the capture unfiltered.
+			logger.Log.Info("Too many pods for setting ebpf filter %d and 443 filter disabled, skipping bpf filter", len(pods))
+			return
+		}
 		logger.Log.Info("Too many pods for setting ebpf filter %d, setting just not 443", len(pods))
 		expr = "port not 443"
 	} else {

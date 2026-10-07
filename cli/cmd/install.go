@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/logger"
+	"github.com/karthick-kk/kubeshark-oss/cli/config/configStructs"
+	"github.com/karthick-kk/kubeshark-oss/logger"
 	"github.com/spf13/cobra"
 )
 
